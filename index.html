@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Molar Mass Assignment</title>
+    <!-- Include html2pdf library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        /* --- CSS Styles --- */
+        :root {
+            --primary: #2563eb;       /* Blue */
+            --primary-hover: #1d4ed8;
+            --success-bg: #d1fae5;    /* Light Green */
+            --success-border: #10b981;/* Green Border */
+            --error-bg: #fee2e2;      /* Light Red */
+            --error-border: #ef4444;  /* Red Border */
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --bg-color: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 80px; /* Space for footer */
+            line-height: 1.4;
+        }
+
+        .container {
+            max-width: 800px; 
+            margin: 0 auto;
+            background: var(--bg-color);
+            min-height: 80vh;
+        }
+
+        /* Header Styles */
+        header {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid var(--primary);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        h1 { margin: 0; font-size: 1.6rem; color: var(--text-dark); font-weight: 800; }
+        .subtitle { color: var(--text-light); margin-top: 4px; font-size: 1rem; font-weight: 600; }
+        .instructions { color: #555; margin-top: 6px; font-size: 0.9rem; font-style: italic; max-width: 600px; }
+
+        /* Student Info Section */
+        .student-info {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: flex-start; 
+            gap: 20px;
+            border: 1px solid #e2e8f0;
+            justify-content: space-between;
+        }
+        
+        .name-inputs { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            flex-grow: 1; 
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #final-score {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #000;
+            display: none;
+            border: 3px solid #000;
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: #fff;
+            align-self: center;
+        }
+
+        /* Buttons (Hidden in PDF) */
+        .btn-group { display: flex; gap: 10px; }
+        
+        button {
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+
+        .btn-test { background-color: #f59e0b; color: white; }
+        .btn-test:hover { background-color: #d97706; }
+
+        .btn-submit { 
+            background-color: #059669; 
+            color: white; 
+            font-size: 1.1rem; 
+            padding: 12px 24px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            min-width: 250px;
+        }
+        .btn-submit:hover { background-color: #047857; transform: translateY(-2px); }
+        .btn-submit:disabled { background-color: #94a3b8; cursor: not-allowed; transform: none; }
+
+        /* Messages */
+        #msg-box {
+            display: none;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .msg-error { background-color: var(--error-bg); color: #991b1b; border: 1px solid var(--error-border); }
+        .msg-success { background-color: var(--success-bg); color: #065f46; border: 1px solid var(--success-border); }
+
+        /* Card / Problem Styles */
+        .card {
+            background: white;
+            border: 2px solid #333;
+            border-radius: 10px;
+            padding: 15px; 
+            margin-bottom: 15px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+            animation: fadeIn 0.5s ease-out;
+            page-break-inside: avoid;
+        }
+
+        .problem-number {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 2rem;
+            color: #000;
+            font-weight: bold;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .level-badge {
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        h2 { margin-top: 0; color: #000; font-size: 1.25rem; margin-bottom: 10px; }
+        .compound-name { color: #000; font-weight: 800; }
+
+        /* Form Elements */
+        label { display: block; font-weight: 700; color: #000; font-size: 0.9rem; min-width: 100px; }
+        
+        input[type="text"], input[type="number"], select {
+            padding: 6px 8px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+            color: #000;
+            background-color: #fff;
+            text-align: center;
+        }
+        
+        input:disabled, select:disabled { 
+            background-color: #fff; 
+            color: #000; 
+            border-color: #333; 
+            opacity: 1; 
+        }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+
+        .flex-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px !important; }
+        
+        /* Larger Formula Input */
+        .formula-input { 
+            font-family: 'Segoe UI', sans-serif; 
+            font-weight: bold; 
+            flex-grow: 1; 
+            max-width: 350px; 
+            font-size: 1.5rem !important; 
+            padding: 8px 12px !important; 
+            letter-spacing: 0.5px;
+        }
+
+        /* Calculation Grid */
+        .calc-container {
+            background-color: #fff; 
+            border: none;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        .setup-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 8px;
+            white-space: nowrap;
+        }
+        
+        .setup-row input { text-align: center; }
+        .w-small { width: 50px; }
+        .w-medium { width: 80px; }
+        .w-large { width: 100px; }
+        
+        .operator { font-weight: 900; color: #000; user-select: none; padding: 0 2px; font-size: 1.2rem; }
+        .unit-display { background-color: #fff; font-size: 0.75rem; color: #000; border: 1px solid #333; }
+
+        /* --- PDF Generation Styles (MAXIMUM CONTRAST) --- */
+        .graded-span {
+            display: inline-block;
+            padding: 4px 6px;
+            border: 2px solid #000 !important; 
+            font-weight: 900 !important; 
+            min-width: 35px; 
+            text-align: center;
+            margin: 0 4px; 
+            font-size: 1rem;
+            white-space: nowrap;
+            line-height: 1.2;
+            color: #000 !important; 
+            font-family: 'Arial', sans-serif;
+            opacity: 1 !important;
+        }
+        
+        .grade-formula {
+            font-size: 24px !important; 
+            padding: 6px 12px !important;
+            min-width: 160px !important;
+            font-family: 'Arial', sans-serif !important;
+            letter-spacing: 1px;
+        }
+        
+        .grade-formula sub {
+            font-size: 18px !important;
+            vertical-align: sub;
+        }
+        
+        .grade-correct {
+            background-color: #4ade80 !important; 
+            border-color: #000 !important; 
+        }
+        
+        .grade-incorrect {
+            background-color: #f87171 !important; 
+            border-color: #000 !important;
+        }
+        
+        .grade-readonly {
+            background-color: #ffffff !important; 
+            border: 2px solid #000 !important;
+            color: #000 !important;
+        }
+
+        /* Final Answer Section */
+        .final-answer {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        /* --- PDF MODE OVERRIDES (Aggressive Compaction) --- */
+        .pdf-mode {
+            background-color: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            color: #000 !important;
+            /* Scale down slightly to ensure vertical fit */
+            transform: scale(0.85); 
+            transform-origin: top center;
+        }
+        
+        .pdf-mode body { padding: 0 !important; color: #000 !important; }
+        
+        /* Reduce main container padding */
+        .pdf-mode .container { padding: 0 15px !important; max-width: 100% !important; min-height: 0 !important; }
+
+        /* Shrink header */
+        .pdf-mode header {
+            padding: 5px 10px !important;
+            margin-bottom: 2px !important;
+            border: 2px solid #000;
+            box-shadow: none;
+        }
+        .pdf-mode h1 { font-size: 18px !important; margin: 0 !important; color: #000 !important; font-weight: bold; }
+        .pdf-mode .subtitle { font-size: 12px !important; margin: 0 !important; color: #000 !important; }
+        .pdf-mode .instructions { display: none !important; }
+
+        /* Compact Student Info */
+        .pdf-mode .student-info {
+            padding: 2px 10px !important;
+            margin-bottom: 5px !important;
+            border: 2px solid #000;
+        }
+        .pdf-mode label { font-size: 11px !important; margin-bottom: 0 !important; color: #000 !important; font-weight: bold !important; min-width: 80px; }
+        .pdf-mode #student-name-display, .pdf-mode #class-period-display, .pdf-mode #submission-time-display { 
+            font-size: 14px !important; 
+            font-weight: bold; 
+            color: #000 !important; 
+            text-decoration: none; 
+        }
+        .pdf-mode #final-score { 
+            font-size: 16px !important; 
+            padding: 2px 8px !important; 
+            display: block !important; 
+            border: 3px solid #000 !important;
+            color: #000 !important;
+            background-color: #fff !important;
+        }
+
+        /* Compact Cards */
+        .pdf-mode .card {
+            padding: 2px 10px !important;
+            margin-bottom: 4px !important;
+            border: 2px solid #000 !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            page-break-inside: avoid;
+        }
+        
+        .pdf-mode .problem-number {
+            font-size: 16px !important;
+            top: 2px !important;
+            right: 5px !important;
+            color: #000 !important; 
+            opacity: 0.5;
+        }
+        
+        .pdf-mode .level-badge { display: none !important; } 
+        .pdf-mode h2 { font-size: 14px !important; margin-bottom: 2px !important; color: #000 !important; font-weight: bold; }
+        .pdf-mode .formula-display { font-size: 20px !important; font-weight: bold !important; color: #000 !important; }
+        
+        .pdf-mode .calc-container { padding: 2px !important; border: none !important; background: none !important; }
+        .pdf-mode .setup-row { margin-bottom: 1px !important; }
+        .pdf-mode .final-answer { margin-top: 2px !important; padding-top: 2px !important; border-top: 2px solid #000 !important; }
+        
+        /* Font sizing for inputs/spans in PDF */
+        .pdf-mode .graded-span {
+            font-size: 13px !important;
+            padding: 3px 10px !important;
+            min-width: 45px !important;
+            border-color: #000 !important;
+            color: #000 !important;
+            margin: 0 10px !important;
+        }
+        .pdf-mode .operator { font-size: 16px !important; color: #000 !important; font-weight: bold !important; padding: 0 5px !important; }
+
+        /* Hidden Teacher Footer - Fixed & Visible */
+        .teacher-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200000;
+            background: transparent;
+            pointer-events: none;
+        }
+        
+        .teacher-footer-inner {
+            pointer-events: auto; 
+            opacity: 0.2; 
+            font-size: 0.9rem;
+            color: #94a3b8; 
+            cursor: pointer;
+            padding: 15px 40px; 
+            background: rgba(255, 255, 255, 0.5); 
+            user-select: none;
+            transition: opacity 0.3s;
+        }
+        
+        .teacher-footer-inner:hover { opacity: 0.8; color: var(--primary); }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 300000;
+            display: none; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            text-align: center; width: 300px;
+            border: 2px solid #333;
+        }
+        .modal-content input { width: 90%; margin: 15px 0; padding: 10px; font-size: 1.1rem; border: 1px solid #ccc; }
+        .modal-content button { padding: 10px 20px; font-size: 1rem; cursor: pointer; border-radius: 4px; border: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- Modal for Password -->
+    <div id="reset-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:#333;">Teacher Reset</h3>
+            <p style="margin-bottom:5px; color:#666;">Enter Password:</p>
+            <input type="password" id="reset-pass" placeholder="Password" />
+            <div style="display:flex; justify-content: center; gap: 10px;">
+                <button onclick="checkResetPass()" style="background: #2563eb; color:white;">Unlock</button>
+                <button onclick="closeResetModal()" style="background: #e5e7eb; color:#333;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div>
+                <h1>Calculating Molar Mass</h1>
+                <div class="subtitle">Show Your Work, Show Your Units, and Label Everything.</div>
+            </div>
+            <!-- Removed buttons from header -->
+        </header>
+
+        <!-- Student Info -->
+        <div class="student-info">
+            <div class="name-inputs">
+                <!-- Name -->
+                <div class="input-group">
+                    <label for="student-name">Name:</label>
+                    <input type="text" id="student-name" placeholder="Enter your full name" style="width: 300px;">
+                    <span id="student-name-display" style="display:none;"></span>
+                </div>
+                
+                <!-- Period -->
+                <div class="input-group">
+                    <label for="class-period">Period:</label>
+                    <select id="class-period" style="width: 150px;">
+                        <option value="">Select...</option>
+                        <option value="1">Period 1</option>
+                        <option value="2">Period 2</option>
+                        <option value="3">Period 3</option>
+                        <option value="4">Period 4</option>
+                        <option value="5">Period 5</option>
+                        <option value="6">Period 6</option>
+                        <option value="7">Period 7</option>
+                        <option value="8">Period 8</option>
+                    </select>
+                    <span id="class-period-display" style="display:none;"></span>
+                </div>
+
+                <!-- Time -->
+                <div class="input-group">
+                    <label for="submission-time">Date/Time:</label>
+                    <input type="text" id="submission-time" readonly style="width: 200px; background-color: #fff; color: #000;">
+                    <span id="submission-time-display" style="display:none;"></span>
+                </div>
+            </div>
+            <div id="final-score">Score: 0 / 0</div>
+        </div>
+
+        <!-- Problems Area -->
+        <div id="problems-container"></div>
+
+        <!-- Submit Button -->
+        <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;" class="no-print">
+            <div id="msg-box"></div>
+            <button onclick="submitAssignment()" id="btn-submit-assign" class="btn-submit">
+                Grade Assignment
+            </button>
+        </div>
+    </div>
+
+    <!-- Hidden Teacher Reset -->
+    <div class="teacher-footer no-print">
+        <span class="teacher-footer-inner" onclick="openResetModal()">Chemistry is pHun</span>
+    </div>
+
+    <script>
+        // --- Database ---
+        const compoundsLevel1 = [
+            { name: "Sodium Chloride", formula: "NaCl", mass: 58.443, rows: 2, elements: [{sym: "Na", m: 22.990, q: 1}, {sym: "Cl", m: 35.453, q: 1}] },
+            { name: "Magnesium Oxide", formula: "MgO", mass: 40.304, rows: 2, elements: [{sym: "Mg", m: 24.305, q: 1}, {sym: "O", m: 15.999, q: 1}] },
+            { name: "Silver Chloride", formula: "AgCl", mass: 143.321, rows: 2, elements: [{sym: "Ag", m: 107.868, q: 1}, {sym: "Cl", m: 35.453, q: 1}] },
+            { name: "Potassium Chloride", formula: "KCl", mass: 74.551, rows: 2, elements: [{sym: "K", m: 39.098, q: 1}, {sym: "Cl", m: 35.453, q: 1}] },
+            { name: "Lithium Sulfide", formula: "Li2S", mass: 45.947, rows: 2, elements: [{sym: "Li", m: 6.941, q: 2}, {sym: "S", m: 32.065, q: 1}] },
+            { name: "Carbon Dioxide", formula: "CO2", mass: 44.009, rows: 2, elements: [{sym: "C", m: 12.011, q: 1}, {sym: "O", m: 15.999, q: 2}] },
+            { name: "Sulfur Dioxide", formula: "SO2", mass: 64.063, rows: 2, elements: [{sym: "S", m: 32.065, q: 1}, {sym: "O", m: 15.999, q: 2}] }
+        ];
+
+        const compoundsLevel2 = [
+            { name: "Aluminum Oxide", formula: "Al2O3", mass: 101.961, rows: 2, elements: [{sym: "Al", m: 26.982, q: 2}, {sym: "O", m: 15.999, q: 3}] },
+            { name: "Iron (III) Oxide", formula: "Fe2O3", mass: 159.687, rows: 2, elements: [{sym: "Fe", m: 55.845, q: 2}, {sym: "O", m: 15.999, q: 3}] },
+            { name: "Iron (II) Chloride", formula: "FeCl2", mass: 126.751, rows: 2, elements: [{sym: "Fe", m: 55.845, q: 1}, {sym: "Cl", m: 35.453, q: 2}] },
+            { name: "Lead (IV) Oxide", formula: "PbO2", mass: 239.198, rows: 2, elements: [{sym: "Pb", m: 207.200, q: 1}, {sym: "O", m: 15.999, q: 2}] },
+            { name: "Copper (I) Oxide", formula: "Cu2O", mass: 143.091, rows: 2, elements: [{sym: "Cu", m: 63.546, q: 2}, {sym: "O", m: 15.999, q: 1}] },
+            { name: "Tin (II) Fluoride", formula: "SnF2", mass: 156.706, rows: 2, elements: [{sym: "Sn", m: 118.710, q: 1}, {sym: "F", m: 18.998, q: 2}] },
+            { name: "Cobalt (II) Chloride", formula: "CoCl2", mass: 129.839, rows: 2, elements: [{sym: "Co", m: 58.933, q: 1}, {sym: "Cl", m: 35.453, q: 2}] },
+            { name: "Dinitrogen Pentoxide", formula: "N2O5", mass: 108.009, rows: 2, elements: [{sym: "N", m: 14.007, q: 2}, {sym: "O", m: 15.999, q: 5}] },
+            { name: "Phosphorus Trichloride", formula: "PCl3", mass: 137.333, rows: 2, elements: [{sym: "P", m: 30.974, q: 1}, {sym: "Cl", m: 35.453, q: 3}] },
+            { name: "Sulfur Hexafluoride", formula: "SF6", mass: 146.053, rows: 2, elements: [{sym: "S", m: 32.065, q: 1}, {sym: "F", m: 18.998, q: 6}] },
+            { name: "Carbon Tetrachloride", formula: "CCl4", mass: 153.823, rows: 2, elements: [{sym: "C", m: 12.011, q: 1}, {sym: "Cl", m: 35.453, q: 4}] },
+            { name: "Dinitrogen Tetroxide", formula: "N2O4", mass: 92.010, rows: 2, elements: [{sym: "N", m: 14.007, q: 2}, {sym: "O", m: 15.999, q: 4}] },
+            { name: "Boron Trifluoride", formula: "BF3", mass: 67.805, rows: 2, elements: [{sym: "B", m: 10.811, q: 1}, {sym: "F", m: 18.998, q: 3}] }
+        ];
+
+        const compoundsLevel3 = [
+            { name: "Calcium Carbonate", formula: "CaCO3", mass: 100.086, rows: 3, elements: [{sym: "Ca", m: 40.078, q: 1}, {sym: "C", m: 12.011, q: 1}, {sym: "O", m: 15.999, q: 3}] },
+            { name: "Sodium Hydroxide", formula: "NaOH", mass: 39.997, rows: 3, elements: [{sym: "Na", m: 22.990, q: 1}, {sym: "O", m: 15.999, q: 1}, {sym: "H", m: 1.008, q: 1}] },
+            { name: "Aluminum Sulfate", formula: "Al2(SO4)3", mass: 342.147, rows: 3, elements: [{sym: "Al", m: 26.982, q: 2}, {sym: "S", m: 32.065, q: 3}, {sym: "O", m: 15.999, q: 12}] },
+            { name: "Zinc Phosphate", formula: "Zn3(PO4)2", mass: 386.080, rows: 3, elements: [{sym: "Zn", m: 65.380, q: 3}, {sym: "P", m: 30.974, q: 2}, {sym: "O", m: 15.999, q: 8}] },
+            { name: "Calcium Hydroxide", formula: "Ca(OH)2", mass: 74.092, rows: 3, elements: [{sym: "Ca", m: 40.078, q: 1}, {sym: "O", m: 15.999, q: 2}, {sym: "H", m: 1.008, q: 2}] },
+            { name: "Magnesium Sulfate", formula: "MgSO4", mass: 120.366, rows: 3, elements: [{sym: "Mg", m: 24.305, q: 1}, {sym: "S", m: 32.065, q: 1}, {sym: "O", m: 15.999, q: 4}] },
+            { name: "Copper (II) Nitrate", formula: "Cu(NO3)2", mass: 187.554, rows: 3, elements: [{sym: "Cu", m: 63.546, q: 1}, {sym: "N", m: 14.007, q: 2}, {sym: "O", m: 15.999, q: 6}] }
+        ];
+
+        let currentProblems = [];
+        let submitStep = 0; 
+
+        // --- Logic ---
+        function toSubscript(str) {
+            const map = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉' };
+            return str.replace(/[0-9]/g, m => map[m]);
+        }
+
+        // Generate HTML with <sub> tags
+        function toHtmlSubscript(str) {
+            const subMap = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉' };
+            // Replace numbers with sub tags
+            return str.replace(/([0-9]+)/g, "<sub>$1</sub>");
+        }
+
+        function handleFormulaInput(e) {
+            const input = e.target;
+            const start = input.selectionStart;
+            const oldVal = input.value;
+            const newVal = toSubscript(oldVal);
+            if (oldVal !== newVal) {
+                input.value = newVal;
+                input.selectionStart = input.selectionEnd = start;
+            }
+        }
+
+        function getRandomFrom(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('en-US', { 
+                year: 'numeric', month: 'numeric', day: 'numeric', 
+                hour: 'numeric', minute: 'numeric', hour12: true 
+            });
+            const input = document.getElementById('submission-time');
+            if(input) input.value = timeString;
+        }
+
+        function generateProblems() {
+            // Reset UI
+            document.getElementById('final-score').style.display = 'none';
+            const btn = document.getElementById('btn-submit-assign');
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = "Grade Assignment";
+                btn.style.backgroundColor = "#059669";
+            }
+            document.getElementById('msg-box').style.display = 'none';
+            document.getElementById('student-name').disabled = false;
+            document.getElementById('class-period').disabled = false; 
+            if(document.querySelector('.btn-test')) document.querySelector('.btn-test').disabled = false;
+            if(document.getElementById('btn-new-set')) document.getElementById('btn-new-set').disabled = false;
+
+            submitStep = 0;
+            updateTime();
+
+            const container = document.getElementById('problems-container');
+            container.innerHTML = '';
+            
+            // 4 Problems: Easy, Medium, Easy, Advanced
+            const p1 = { ...getRandomFrom(compoundsLevel1), level: "Problem 1 (Easy)" };
+            const p2 = { ...getRandomFrom(compoundsLevel2), level: "Problem 2 (Medium)" };
+            const p3 = { ...getRandomFrom(compoundsLevel1), level: "Problem 3 (Easy)" };
+            const p4 = { ...getRandomFrom(compoundsLevel3), level: "Problem 4 (Advanced)" };
+
+            currentProblems = [p1, p2, p3, p4];
+
+            currentProblems.forEach((problem, index) => {
+                const card = document.createElement('div');
+                card.className = "card";
+                
+                let rowsHtml = '';
+                problem.elements.forEach(el => {
+                    rowsHtml += `
+                        <div class="setup-row">
+                            <input type="text" class="inp-sym w-small" value="${el.sym}" readonly style="background-color: #f1f5f9; font-weight: bold; color: #334155;">
+                            <span class="operator">=</span>
+                            <input type="number" step="0.001" class="inp-mass w-large" placeholder="Mass">
+                            <input type="text" class="inp-unit unit-display w-small" placeholder="Unit">
+                            <span class="operator">x</span>
+                            <input type="number" class="inp-qty w-small" placeholder="Qty">
+                            <span class="operator">=</span>
+                            <input type="number" step="0.001" class="inp-total w-large" placeholder="Total">
+                            <input type="text" class="inp-total-unit unit-display w-small" placeholder="Unit">
+                        </div>
+                    `;
+                });
+
+                const formulaHtml = toHtmlSubscript(problem.formula);
+
+                card.innerHTML = `
+                    <div class="problem-number">#${index + 1}</div>
+                    <div class="level-badge">${problem.level}</div>
+                    <h2>Calculate molar mass for <span class="compound-name">${problem.name}, <span class="formula-display">${formulaHtml}</span></span></h2>
+                    
+                    <div id="calc-section-${index}">
+                        <label>Setup Calculation:</label>
+                        <div class="calc-container">
+                            <div class="setup-rows-container">
+                                ${rowsHtml}
+                            </div>
+                        </div>
+
+                        <div class="final-answer">
+                            <div style="flex-grow: 1;">
+                                <label>Final Molar Mass</label>
+                                <input type="number" step="0.001" id="mass-${index}" placeholder="Total Mass" style="width: 100%; font-weight: bold;">
+                            </div>
+                            <div>
+                                <label>Units</label>
+                                <input type="text" id="units-${index}" placeholder="Units" style="width: 100px;">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- Validation & Grading ---
+        function markInput(element, isCorrect) {
+            element.classList.remove('correct', 'incorrect');
+            if (isCorrect) element.classList.add('correct');
+            else element.classList.add('incorrect');
+        }
+
+        function checkUnits(input) {
+            const val = input.value.trim().toLowerCase().replace(/\s/g, '');
+            return (val === 'g/mol' || val === 'grams/mol');
+        }
+
+        function gradeAssignment() {
+            let totalScore = 0;
+            let maxScore = 0;
+
+            currentProblems.forEach((problem, index) => {
+                const setupContainer = document.querySelector(`#calc-section-${index} .setup-rows-container`);
+                const rows = setupContainer.querySelectorAll('.setup-row');
+
+                rows.forEach((row, rowIndex) => {
+                    const elData = problem.elements[rowIndex];
+                    
+                    const inpMass = row.querySelector('.inp-mass');
+                    const inpUnit1 = row.querySelector('.inp-unit');
+                    const inpQty = row.querySelector('.inp-qty');
+                    const inpTotal = row.querySelector('.inp-total');
+                    const inpUnit2 = row.querySelector('.inp-total-unit');
+
+                    maxScore++;
+                    const mVal = parseFloat(inpMass.value);
+                    if (!isNaN(mVal) && Math.abs(mVal - elData.m) <= 0.005) { markInput(inpMass, true); totalScore++; } 
+                    else { markInput(inpMass, false); }
+
+                    maxScore++;
+                    if (checkUnits(inpUnit1)) { markInput(inpUnit1, true); totalScore++; } 
+                    else { markInput(inpUnit1, false); }
+
+                    maxScore++;
+                    if (parseInt(inpQty.value) === elData.q) { markInput(inpQty, true); totalScore++; } 
+                    else { markInput(inpQty, false); }
+
+                    maxScore++;
+                    const tVal = parseFloat(inpTotal.value);
+                    if (!isNaN(tVal) && Math.abs(tVal - (elData.m * elData.q)) <= 0.01) { markInput(inpTotal, true); totalScore++; } 
+                    else { markInput(inpTotal, false); }
+
+                    maxScore++;
+                    if (checkUnits(inpUnit2)) { markInput(inpUnit2, true); totalScore++; } 
+                    else { markInput(inpUnit2, false); }
+                });
+
+                const massInp = document.getElementById(`mass-${index}`);
+                const unitInp = document.getElementById(`units-${index}`);
+
+                maxScore++;
+                const userMass = parseFloat(massInp.value);
+                if (!isNaN(userMass) && Math.abs(userMass - problem.mass) <= 0.05) { markInput(massInp, true); totalScore++; } 
+                else { markInput(massInp, false); }
+
+                maxScore++;
+                if (checkUnits(unitInp)) { markInput(unitInp, true); totalScore++; } 
+                else { markInput(unitInp, false); }
+            });
+
+            const scoreDisplay = document.getElementById('final-score');
+            scoreDisplay.textContent = `Score: ${totalScore} / ${maxScore}`;
+            scoreDisplay.style.display = 'block';
+        }
+
+        // --- View Conversion for PDF ---
+        function replaceInputsWithText() {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                let displayValue = input.value;
+                if (input.tagName === 'SELECT') {
+                    displayValue = input.options[input.selectedIndex].text;
+                }
+                if (!displayValue || displayValue === "Select...") displayValue = "_____";
+
+                // Handle top inputs
+                if (['student-name', 'class-period', 'submission-time'].includes(input.id)) {
+                    const displaySpan = document.getElementById(input.id + '-display');
+                    if (displaySpan) {
+                        displaySpan.textContent = displayValue;
+                        displaySpan.style.display = 'inline';
+                    }
+                    input.style.display = 'none'; 
+                    return; 
+                }
+
+                // Create Span for grading
+                const span = document.createElement('span');
+                span.textContent = displayValue;
+                
+                let cssClass = "graded-span";
+                if (input.classList.contains('correct')) cssClass += " grade-correct";
+                else if (input.classList.contains('incorrect')) cssClass += " grade-incorrect";
+                else if (input.readOnly) cssClass += " grade-readonly";
+                
+                span.className = cssClass;
+                input.parentNode.replaceChild(span, input);
+            });
+        }
+
+        // --- Modal Logic ---
+        function openResetModal() {
+            document.getElementById('reset-modal').style.display = 'flex';
+            setTimeout(() => {
+                const passInput = document.getElementById('reset-pass');
+                if(passInput) passInput.focus();
+            }, 100);
+        }
+
+        function closeResetModal() {
+            document.getElementById('reset-modal').style.display = 'none';
+            document.getElementById('reset-pass').value = '';
+        }
+
+        function checkResetPass() {
+            const pass = document.getElementById('reset-pass').value;
+            if (pass === "Nichole Landry") {
+                localStorage.removeItem('molarMassSubmitted');
+                localStorage.removeItem('molarMassScore');
+                location.reload();
+            } else {
+                alert("Incorrect Password");
+                document.getElementById('reset-pass').value = '';
+            }
+        }
+
+        function fillCorrectAnswers() {
+            document.getElementById('student-name').value = "Test User";
+            document.getElementById('class-period').value = "1";
+            currentProblems.forEach((problem, index) => {
+                const setupContainer = document.querySelector(`#calc-section-${index} .setup-rows-container`);
+                const rows = setupContainer.querySelectorAll('.setup-row');
+                rows.forEach((row, rowIndex) => {
+                    const elData = problem.elements[rowIndex];
+                    row.querySelector('.inp-mass').value = elData.m.toFixed(3);
+                    row.querySelector('.inp-unit').value = "g/mol";
+                    row.querySelector('.inp-qty').value = elData.q;
+                    row.querySelector('.inp-total').value = (elData.m * elData.q).toFixed(3);
+                    row.querySelector('.inp-total-unit').value = "g/mol";
+                });
+                document.getElementById(`mass-${index}`).value = problem.mass.toFixed(3);
+                document.getElementById(`units-${index}`).value = "g/mol";
+            });
+        }
+
+        function submitAssignment() {
+            const nameInput = document.getElementById('student-name');
+            const classPeriod = document.getElementById('class-period');
+            const btn = document.getElementById('btn-submit-assign');
+            const msgBox = document.getElementById('msg-box');
+
+            if (!nameInput.value.trim() || !classPeriod.value) {
+                msgBox.textContent = "Please enter your Name and Select a Class Period.";
+                msgBox.className = "msg-error";
+                msgBox.style.display = "block";
+                return;
+            } else {
+                msgBox.style.display = "none";
+            }
+
+            if (submitStep === 0) {
+                btn.innerHTML = "Are you sure? Click again to Grade.";
+                btn.style.backgroundColor = "#d97706"; 
+                submitStep = 1;
+                setTimeout(() => {
+                    if (submitStep === 1) {
+                        submitStep = 0;
+                        btn.textContent = "Grade Assignment";
+                        btn.style.backgroundColor = "#059669";
+                    }
+                }, 5000);
+                return;
+            }
+
+            if (submitStep === 1) {
+                // Final time update
+                updateTime();
+                
+                gradeAssignment();
+
+                const controls = document.querySelectorAll('.no-print, button');
+                controls.forEach(c => c.style.display = 'none');
+
+                document.querySelector('.container').classList.add('pdf-mode');
+                replaceInputsWithText();
+
+                // Generate filename: Molar_Mass_Name_P1.pdf
+                const cleanName = nameInput.value.replace(/[^a-z0-9]/gi, '_');
+                const period = classPeriod.value;
+                const filename = `Molar_Mass_${cleanName}_P${period}.pdf`;
+
+                const opt = {
+                    margin:       [0.1, 0.2], 
+                    filename:     filename,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true },
+                    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' } 
+                };
+
+                setTimeout(() => {
+                    html2pdf().set(opt).from(document.querySelector('.container')).save().then(() => {
+                        const scoreDisplay = document.getElementById('final-score');
+                        const scoreText = scoreDisplay ? scoreDisplay.textContent : "Assignment Submitted";
+                        
+                        // Save State
+                        localStorage.setItem('molarMassSubmitted', 'true');
+                        localStorage.setItem('molarMassScore', scoreText);
+
+                        // Clear the container content and replace with submission screen
+                        document.querySelector('.container').innerHTML = `
+                            <div style="text-align:center; padding: 50px; font-family: sans-serif;">
+                                <h1 style="color: #059669;">Assignment Submitted!</h1>
+                                <p style="font-size: 1.2rem;">Your PDF has been downloaded.</p>
+                                <p style="font-size: 1.5rem; font-weight: bold; margin-top: 20px;">${scoreText}</p>
+                                <p style="margin-top: 20px; color: #666;">This assignment is locked.</p>
+                            </div>
+                            <div class="teacher-footer no-print">
+                                <span class="teacher-footer-inner" onclick="openResetModal()">Chemistry is pHun</span>
+                            </div>
+                        `;
+                    });
+                }, 200);
+            }
+        }
+
+        // Init
+        window.onload = function() {
+            if (localStorage.getItem('molarMassSubmitted') === 'true') {
+                const scoreText = localStorage.getItem('molarMassScore') || "Assignment Submitted";
+                document.querySelector('.container').innerHTML = `
+                    <div style="text-align:center; padding: 50px; font-family: sans-serif;">
+                        <h1 style="color: #059669;">Assignment Already Submitted</h1>
+                        <p style="font-size: 1.2rem;">You have already completed this assignment.</p>
+                        <p style="font-size: 1.5rem; font-weight: bold; margin-top: 20px;">${scoreText}</p>
+                    </div>
+                    <div class="teacher-footer no-print">
+                        <span class="teacher-footer-inner" onclick="openResetModal()">Chemistry is pHun</span>
+                    </div>
+                `;
+            } else {
+                generateProblems();
+                updateTime();
+                setInterval(updateTime, 60000); 
+            }
+        };
+    </script>
+</body>
+</html>
